@@ -1,14 +1,14 @@
 package main
 
 import (
-	"net/http"
 	"github.com/gorilla/mux"
+	"net/http"
 )
 
 type Route struct {
-	Name string
-	Method string
-	Pattern string
+	Name        string
+	Method      string
+	Pattern     string
 	HandlerFunc http.HandlerFunc
 }
 
@@ -22,8 +22,8 @@ func NewRouter() *mux.Router {
 			Path(route.Pattern).
 			Name(route.Name).
 			Handler(route.HandlerFunc)
-		}
-		return router
+	}
+	return router
 }
 
 var routes = Routes{
@@ -34,4 +34,45 @@ var routes = Routes{
 		GetUserByID,
 	},
 	Route{
-
+		"CreateUser",
+		"POST",
+		"/users",
+		CreateUser,
+	},
+	Route{
+		"UpdateUser",
+		"PUT",
+		"/users",
+		UpdateUser,
+	},
+	Route{
+		"RemoveUser",
+		"DELETE",
+		"/users",
+		DeleteUser,
+	},
+	Route{
+		"GetGroupMembers",
+		"GET",
+		"/groups",
+		GetGroupMembers,
+	},
+	Route{
+		"CreateGroup",
+		"POST",
+		"/groups",
+		CreateGroup,
+	},
+	Route{
+		"UpdateGroup",
+		"PUT",
+		"/groups",
+		UpdateGroup,
+	},
+	Route{
+		"DeleteGroup",
+		"DELETE",
+		"/groups",
+		DeleteGroup,
+	},
+}
