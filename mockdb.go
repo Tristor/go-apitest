@@ -19,9 +19,14 @@ func DBFindUser(userid string) User {
 	return User{}
 }
 
-func DBCreateUser(u User) User {
+func DBCreateUser(u User) (User, error) {
+	f := DBFindUser(u.UserID)
+	if f.UserID == u.UserID {
+		err = error.New("Cannot create a duplicate user")
+		return f, err
+	}
 	users = append(users, u)
-	return u
+	return u, nil
 }
 
 func DBDeleteUser(userid string) error {
