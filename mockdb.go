@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 var users Users
 
@@ -22,7 +25,7 @@ func DBFindUser(userid string) User {
 func DBCreateUser(u User) (User, error) {
 	f := DBFindUser(u.UserID)
 	if f.UserID == u.UserID {
-		err = error.New("Cannot create a duplicate user")
+		err := errors.New("Cannot create a duplicate user")
 		return f, err
 	}
 	users = append(users, u)
@@ -40,11 +43,14 @@ func DBDeleteUser(userid string) error {
 }
 
 func DBUpdateUser(u User) (User, error) {
-	userid = u.UserID
+	userid := u.UserID
 	err := DBDeleteUser(userid)
 	if err != nil {
 		return u, fmt.Errorf("Could not find user %s to update", userid)
 	}
-	u = DBCreateUser(u)
-	return u, err
+	u, err = DBCreateUser(u)
+	if err != nil {
+		return u, err
+	}
+	return u, nil
 }
