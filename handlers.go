@@ -18,20 +18,12 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	if err := json.Unmarshal(body, &user); err != nil {
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		w.WriteHeader(422)
-		if err := json.NewEncoder(w).Encode(err); err != nil {
-			panic(err)
-		}
+		ThrowBadEntity(w, r, err)
 	}
 
 	u, err := DBCreateUser(user)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		w.WriteHeader(http.StatusBadRequest)
-		if err := json.NewEncoder(w).Encode(err); err != nil {
-			panic(err)
-		}
+		ThrowClientError(w, r, err)
 	}
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusCreated)
@@ -54,11 +46,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	userid, err := ValidatePath(w, r)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		w.WriteHeader(http.StatusBadRequest)
-		if err := json.NewEncoder(w).Encode(err); err != nil {
-			panic(err)
-		}
+		ThrowClientError(w, r, err)
 	}
 	var user User
 	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
@@ -69,19 +57,11 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	if err := json.Unmarshal(body, &user); err != nil {
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		w.WriteHeader(422)
-		if err := json.NewEncoder(w).Encode(err); err != nil {
-			panic(err)
-		}
+		ThrowBadEntity(w, r, err)
 	}
 	if user.UserID != userid {
 		uiderr := errors.New("The UserID of your JSON object does not match the UserID in the URL Path.  User IDs cannot be changed and are unique.")
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		w.WriteHeader(http.StatusBadRequest)
-		if err := json.NewEncoder(w).Encode(uiderr); err != nil {
-			panic(err)
-		}
+		ThrowClientError(w, r, uiderr)
 	}
 	u, err := DBUpdateUser(user)
 	if err != nil {
@@ -97,11 +77,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 func GetUserByID(w http.ResponseWriter, r *http.Request) {
 	userid, err := ValidatePath(w, r)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		w.WriteHeader(http.StatusBadRequest)
-		if err := json.NewEncoder(w).Encode(err); err != nil {
-			panic(err)
-		}
+		ThrowClientError(w, r, err)
 	}
 	u := DBFindUser(userid)
 	if u.UserID == userid {
