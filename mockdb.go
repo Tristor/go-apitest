@@ -1,3 +1,14 @@
+/*
+This module is kind of hackish, and maybe even slightly terrible.
+That said, it does some useful things in a persistence layer, even if it is
+only a mock.  I've enforced uniqueness, enforced foreign key constraints
+guaranteeing that a group cannot contain members which do not exist as User
+objects and that a User cannot be a member of a group which does not exist.
+
+I'm sure there's a better way to do some of these things, but all I can say
+is it makes me thankful that databases exist, since this would have been
+prettier in SQL.
+*/
 package main
 
 import (
@@ -56,14 +67,18 @@ func DBUpdateUser(u User) (User, error) {
 	return u, nil
 }
 
-func DBCreateGroup(g Group) (Group, error) {
-	f := DBFindGroup(g.GroupName)
-	if f.GroupName == g.GroupName {
+func DBCreateGroup(gwm GroupWithMembers) (GroupWithMembers, error) {
+	f := DBFindGroup(gwm.GroupName)
+	if f.GroupName == gwm.GroupName {
 		err := errors.New("Cannot create a duplicate group")
-		return f, err
+		return gwm, err
 	}
-	groups = append(groups, g)
-	return g, nil
+	gwm, err := DBAddGroupMembers(gwm)
+	if err != nil {
+		return gwm, err
+	}
+	groups = append(groups, Group{gwm.GroupName})
+	return gwm, nil
 }
 
 func DBFindGroup(groupname string) Group {
@@ -80,21 +95,95 @@ func DBDeleteGroup(groupname string) error {
 	for i, g := range groups {
 		if g.GroupName == groupname {
 			groups = append(groups[:i], groups[i+1:]...)
+			err := DBDeleteGroupMembers(groupname)
+			if err != nil {
+				return err
+			}
 			return nil
 		}
 	}
 	return fmt.Errorf("Could not find group %s to delete", groupname)
 }
 
-func DBUpdateGroup(g Group) (Group, error) {
-	groupname := g.GroupName
-	err := DBDeleteGroup(groupname)
+func DBUpdateGroup(gwm GroupWithMembers) (GroupWithMembers, error) {
+	err := DBDeleteGroup(gwm.GroupName)
 	if err != nil {
-		return g, fmt.Errorf("Could not find user %s to update", groupname)
+		return gwm, fmt.Errorf("Could not find group %s to update", gwm.GroupName)
 	}
-	g, err = DBCreateGroup(g)
+	gwm, err = DBCreateGroup(gwm)
 	if err != nil {
-		return g, err
+		return gwm, err
 	}
-	return g, nil
+	return gwm, nil
+}
+
+func DBCheckGroups(u User) error {
+	for _, g := range u.Groups {
+		f := DBFindGroup(g)
+		if f.GroupName != g {
+			return fmt.Errorf("The group %s does not exist. Groups must be created before they can be added to users", g)
+		}
+	}
+	return nil
+}
+
+func DBGetGroupMembers(g Group) GroupWithMembers {
+	var gwm GroupWithMembers
+	gwm.GroupName = g.GroupName
+	for _, u := range users {
+		for _, m := range u.Groups {
+			if m == gwm.GroupName {
+				gwm.GroupMembers = append(gwm.GroupMembers, u.UserID)
+			}
+		}
+	}
+	//If a group has no members, then the slice is empty, which is okay.
+	return gwm
+}
+
+func DBAddGroupMembers(gwm GroupWithMembers) (GroupWithMembers, error) {
+	for _, u := range gwm.GroupMembers {
+		var UserHasGroup bool = false
+		fu := DBFindUser(u)
+		if fu.UserID != u {
+			err := errors.New("Cannot create a group with a non-existent member")
+			return gwm, err
+		}
+		for _, g := range fu.Groups {
+			if g == gwm.GroupName {
+				UserHasGroup = true
+				break
+			}
+		}
+		if UserHasGroup == true {
+			continue
+		}
+		fu.Groups = append(fu.Groups, gwm.GroupName)
+		fu, err := DBUpdateUser(fu)
+		if err != nil {
+			return gwm, err
+		}
+	}
+	return gwm, nil
+}
+
+func DBDeleteGroupMembers(groupname string) error {
+	gwm := DBGetGroupMembers(Group{groupname})
+	for _, u := range gwm.GroupMembers {
+		fu := DBFindUser(u)
+		if fu.UserID != u {
+			err := errors.New("Something terrible has happened and the database is inconsistent.")
+			return err
+		}
+		for i, g := range fu.Groups {
+			if g == gwm.GroupName {
+				fu.Groups = append(fu.Groups[:i], fu.Groups[i+1:]...)
+			}
+		}
+		fu, err := DBUpdateUser(fu)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
