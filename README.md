@@ -30,5 +30,5 @@ As I had discussed on the phone with the recruiter, I'm not really much of a sof
 
 ## Contact Information
 
-Cell: 210-213-7249
+Cell: 210-213-7249  
 Email: tristor@gmail.com
