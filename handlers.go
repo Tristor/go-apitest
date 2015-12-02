@@ -41,11 +41,14 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	userid, err := ValidatePath(w, r)
 	if err != nil {
-		panic(err)
+		ThrowClientError(w, r, err)
+		return
 	}
 	if err := DBDeleteUser(userid); err != nil {
-		panic(err)
+		ThrowClientError(w, r, err)
+		return
 	}
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -130,8 +133,81 @@ func GetGroupMembers(w http.ResponseWriter, r *http.Request) {
 	ThrowNotFound(w, r)
 }
 
-func CreateGroup(w http.ResponseWriter, r *http.Request) {}
+func CreateGroup(w http.ResponseWriter, r *http.Request) {
+	var gwm GroupWithMembers
+	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
+	if err != nil {
+		panic(err)
+	}
+	if err := r.Body.Close(); err != nil {
+		panic(err)
+	}
+	if err := json.Unmarshal(body, &gwm); err != nil {
+		ThrowBadEntity(w, r, err)
+		return
+	}
+	g, err := DBCreateGroup(gwm)
+	if err != nil {
+		ThrowClientError(w, r, err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Location", r.URL.Path+g.GroupName)
+	w.WriteHeader(http.StatusCreated)
+	if err := json.NewEncoder(w).Encode(g); err != nil {
+		panic(err)
+	}
+}
 
-func UpdateGroup(w http.ResponseWriter, r *http.Request) {}
+func UpdateGroup(w http.ResponseWriter, r *http.Request) {
+	groupname, err := ValidatePath(w, r)
+	if err != nil {
+		ThrowClientError(w, r, err)
+		return
+	}
+	var gwm GroupWithMembers
+	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
+	if err != nil {
+		panic(err)
+	}
+	if err := r.Body.Close(); err != nil {
+		panic(err)
+	}
+	if err := json.Unmarshal(body, &gwm); err != nil {
+		ThrowBadEntity(w, r, err)
+		return
+	}
+	if gwm.GroupName != groupname {
+		uiderr := errors.New("The name string in your JSON object does not match the group name provided in the URL")
+		ThrowClientError(w, r, uiderr)
+		return
+	}
+	if g := DBFindGroup(groupname); g.GroupName != groupname {
+		ThrowNotFound(w, r)
+		return
+	}
+	gwm, err = DBUpdateGroup(gwm)
+	if err != nil {
+		ThrowClientError(w, r, err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(gwm); err != nil {
+		panic(err)
+	}
+}
 
-func DeleteGroup(w http.ResponseWriter, r *http.Request) {}
+func DeleteGroup(w http.ResponseWriter, r *http.Request) {
+	groupname, err := ValidatePath(w, r)
+	if err != nil {
+		ThrowClientError(w, r, err)
+		return
+	}
+	if err := DBDeleteGroup(groupname); err != nil {
+		ThrowClientError(w, r, err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.WriteHeader(http.StatusNoContent)
+}
