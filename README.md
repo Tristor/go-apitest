@@ -225,5 +225,5 @@ as I go from code reviews or expect some sort of style guidelines that the team 
 
 ## Contact Information
 
-Cell: 210-213-7249
+Cell: 210-213-7249  
 Email: tristor@gmail.com
