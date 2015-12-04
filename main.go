@@ -8,22 +8,10 @@ documentation can be found in README.md in this repository.
 package main
 
 import (
-	"log"
 	"net/http"
-	"os"
 )
 
 func main() {
-	logfile, err := os.Create("go-apitest.log")
-	if err != nil {
-		panic(err)
-	}
-	defer logfile.Close()
-
-	//Send all logging to the logfile.  This should capture logs
-	//from logger.go too.
-	log.SetOutput(logfile)
-
 	router := NewRouter()
-	log.Fatal(http.ListenAndServe(":8090", router))
+	logger.Fatal(http.ListenAndServe(":8090", router))
 }
