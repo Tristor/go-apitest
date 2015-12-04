@@ -216,6 +216,14 @@ some nested loops, but I was trying to keep the implementation simple to
 understand/debug vs trying to be elegant, considering how hackish it
 already was.
 
+I tried to add logging functionality in as well.  I did some research
+around this, and I'm not exactly sure why it's not doing what I think it
+should be doing.  The log file gets created, it just remains empty.  I
+gave up on troubleshooting it, but left the code if you're curious how I
+did it.  I used a function which takes a http.Handler and returns a
+http.HandlerFunc, so I could wrap the http.Handler during mux.Router
+creation.
+
 As I had discussed on the phone with the recruiter, I'm not really much of a software developer.
 I am able to read/write code, and I understand concepts, but I'm much more focused on
 operations/infrastructure type problems typically.  That said, while what I write works,
