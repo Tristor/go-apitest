@@ -11,7 +11,7 @@ local system before use.
 ## Installation and Usage
 
 ```bash
-$ go get github.com/tduzan/go-apitest
+$ go get github.com/tristor/go-apitest
 $ $GOPATH/bin/go-apitest
 ```
 
