@@ -218,18 +218,11 @@ already was.
 
 I tried to add logging functionality in as well.  I did some research
 around this, and I'm not exactly sure why it's not doing what I think it
-should be doing.  The log file gets created, it just remains empty.  I
-gave up on troubleshooting it, but left the code if you're curious how I
-did it.  I used a function which takes a http.Handler and returns a
-http.HandlerFunc, so I could wrap the http.Handler during mux.Router
-creation.
-
-As I had discussed on the phone with the recruiter, I'm not really much of a software developer.
-I am able to read/write code, and I understand concepts, but I'm much more focused on
-operations/infrastructure type problems typically.  That said, while what I write works,
-it's probably not conforming to style best practices or idiomatic Go.  If I were doing
-this in a team setting on a regular basis, I would either learn expected style
-as I go from code reviews or expect some sort of style guidelines that the team follows.
+should be doing.  The log file gets created, it just remains empty.  In 
+the interest of time I gave up on troubleshooting it, but left the code
+if you're curious how I did it.  I used a function which takes a 
+http.Handler and returns a http.HandlerFunc, so I could wrap the 
+http.Handler during mux.Router creation.
 
 ## Contact Information
 
